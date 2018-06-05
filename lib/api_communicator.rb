@@ -3,12 +3,29 @@ require 'json'
 require 'pry'
 
 def get_characters
-  all_characters = RestClient.get('http://www.swapi.co/api/people/')
-  character_hash = JSON.parse(all_characters)
+  array = []
+  x = 1
+
+  loop do
+    url = "https://www.swapi.co/api/people/?page=#{x}"
+    page = RestClient.get(url)
+    hash = JSON.parse(page)
+    array << hash
+    x += 1
+    break if !hash["next"]
+  end
+  
+  pages = array.flatten
 end
 
-def get_character_info(chars_array, char)
-  chars_array["results"].find { |char_hash| char_hash["name"].downcase == char.downcase }
+def get_character_info(pages_array, char)
+  pages_array.map do |page_hash|
+    page_hash["results"].map do |char_hash|
+      if char_hash["name"].downcase == char.downcase
+        return char_hash
+      end
+    end
+  end
 end
 
 def get_film_urls(character_info)
